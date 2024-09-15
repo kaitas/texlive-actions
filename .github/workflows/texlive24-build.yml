@@ -25,42 +25,65 @@ jobs:
         password: ${{ secrets.CR_PAT }}
       continue-on-error: true
 
-    - name: Notify Slack about CR_PAT failure
+    - name: Notify Slack and Discord about CR_PAT failure
       if: steps.login-ghcr.outcome == 'failure'
       env:
         SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+        DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
       run: |
-        if [ -z "$SLACK_WEBHOOK" ]; then
-          echo "SLACK_WEBHOOK is not set. Skipping Slack notification."
-          exit 0
-        fi
-        
-        RESPONSE=$(curl -w "\n%{http_code}" -X POST $SLACK_WEBHOOK \
-        -H 'Content-type: application/json' \
-        --data '{
-          "attachments": [
-            {
-              "color": "#FF0000",
-              "blocks": [
-                {
-                  "type": "section",
-                  "text": {
-                    "type": "mrkdwn",
-                    "text": "*GitHub Container Registry認証に失敗しました*\n\nCR_PATが有効期限切れしている可能性があります。こちらで新しいPATを設定してください。 https://github.com/settings/tokens\n\n*リポジトリ:* ${{ github.repository }}"
+        MESSAGE="*GitHub Container Registry認証に失敗しました*\n\nCR_PATが有効期限切れしている可能性があります。こちらで新しいPATを設定してください。 https://github.com/settings/tokens\n\n*リポジトリ:* ${{ github.repository }}"
+
+        if [ -n "$SLACK_WEBHOOK" ]; then
+          SLACK_RESPONSE=$(curl -w "\n%{http_code}" -X POST $SLACK_WEBHOOK \
+          -H 'Content-type: application/json' \
+          --data '{
+            "attachments": [
+              {
+                "color": "#FF0000",
+                "blocks": [
+                  {
+                    "type": "section",
+                    "text": {
+                      "type": "mrkdwn",
+                      "text": "'"$MESSAGE"'"
+                    }
                   }
-                }
-              ]
-            }
-          ]
-        }')
+                ]
+              }
+            ]
+          }')
 
-        HTTP_STATUS=$(echo "$RESPONSE" | tail -n1)
-        RESPONSE_BODY=$(echo "$RESPONSE" | sed '$d')
+          SLACK_HTTP_STATUS=$(echo "$SLACK_RESPONSE" | tail -n1)
+          SLACK_RESPONSE_BODY=$(echo "$SLACK_RESPONSE" | sed '$d')
 
-        if [ "$HTTP_STATUS" != "200" ]; then
-          echo "Failed to send Slack notification. HTTP status: $HTTP_STATUS"
-          echo "Response body: $RESPONSE_BODY"
-          exit 1
+          if [ "$SLACK_HTTP_STATUS" != "200" ]; then
+            echo "Failed to send Slack notification. HTTP status: $SLACK_HTTP_STATUS"
+            echo "Response body: $SLACK_RESPONSE_BODY"
+          else
+            echo "Slack notification sent successfully."
+          fi
+        else
+          echo "SLACK_WEBHOOK is not set. Skipping Slack notification."
+        fi
+
+        if [ -n "$DISCORD_WEBHOOK" ]; then
+          DISCORD_RESPONSE=$(curl -w "\n%{http_code}" -X POST $DISCORD_WEBHOOK \
+          -H 'Content-type: application/json' \
+          --data '{
+            "content": "'"$MESSAGE"'"
+          }')
+
+          DISCORD_HTTP_STATUS=$(echo "$DISCORD_RESPONSE" | tail -n1)
+          DISCORD_RESPONSE_BODY=$(echo "$DISCORD_RESPONSE" | sed '$d')
+
+          if [ "$DISCORD_HTTP_STATUS" != "204" ]; then
+            echo "Failed to send Discord notification. HTTP status: $DISCORD_HTTP_STATUS"
+            echo "Response body: $DISCORD_RESPONSE_BODY"
+          else
+            echo "Discord notification sent successfully."
+          fi
+        else
+          echo "DISCORD_WEBHOOK is not set. Skipping Discord notification."
         fi
       continue-on-error: true
 
@@ -96,42 +119,65 @@ jobs:
         password: ${{ secrets.CR_PAT }}
       continue-on-error: true
 
-    - name: Notify Slack about CR_PAT failure
+    - name: Notify Slack and Discord about CR_PAT failure
       if: steps.login-ghcr.outcome == 'failure'
       env:
         SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+        DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
       run: |
-        if [ -z "$SLACK_WEBHOOK" ]; then
-          echo "SLACK_WEBHOOK is not set. Skipping Slack notification."
-          exit 0
-        fi
-        
-        RESPONSE=$(curl -w "\n%{http_code}" -X POST $SLACK_WEBHOOK \
-        -H 'Content-type: application/json' \
-        --data '{
-          "attachments": [
-            {
-              "color": "#FF0000",
-              "blocks": [
-                {
-                  "type": "section",
-                  "text": {
-                    "type": "mrkdwk",
-                    "text": "*GitHub Container Registry認証に失敗しました*\n\nCR_PATが有効期限切れしている可能性があります。こちらで新しいPATを設定してください。 https://github.com/settings/tokens\n\n*リポジトリ:* ${{ github.repository }}"
+        MESSAGE="*GitHub Container Registry認証に失敗しました*\n\nCR_PATが有効期限切れしている可能性があります。こちらで新しいPATを設定してください。 https://github.com/settings/tokens\n\n*リポジトリ:* ${{ github.repository }}"
+
+        if [ -n "$SLACK_WEBHOOK" ]; then
+          SLACK_RESPONSE=$(curl -w "\n%{http_code}" -X POST $SLACK_WEBHOOK \
+          -H 'Content-type: application/json' \
+          --data '{
+            "attachments": [
+              {
+                "color": "#FF0000",
+                "blocks": [
+                  {
+                    "type": "section",
+                    "text": {
+                      "type": "mrkdwn",
+                      "text": "'"$MESSAGE"'"
+                    }
                   }
-                }
-              ]
-            }
-          ]
-        }')
+                ]
+              }
+            ]
+          }')
 
-        HTTP_STATUS=$(echo "$RESPONSE" | tail -n1)
-        RESPONSE_BODY=$(echo "$RESPONSE" | sed '$d')
+          SLACK_HTTP_STATUS=$(echo "$SLACK_RESPONSE" | tail -n1)
+          SLACK_RESPONSE_BODY=$(echo "$SLACK_RESPONSE" | sed '$d')
 
-        if [ "$HTTP_STATUS" != "200" ]; then
-          echo "Failed to send Slack notification. HTTP status: $HTTP_STATUS"
-          echo "Response body: $RESPONSE_BODY"
-          exit 1
+          if [ "$SLACK_HTTP_STATUS" != "200" ]; then
+            echo "Failed to send Slack notification. HTTP status: $SLACK_HTTP_STATUS"
+            echo "Response body: $SLACK_RESPONSE_BODY"
+          else
+            echo "Slack notification sent successfully."
+          fi
+        else
+          echo "SLACK_WEBHOOK is not set. Skipping Slack notification."
+        fi
+
+        if [ -n "$DISCORD_WEBHOOK" ]; then
+          DISCORD_RESPONSE=$(curl -w "\n%{http_code}" -X POST $DISCORD_WEBHOOK \
+          -H 'Content-type: application/json' \
+          --data '{
+            "content": "'"$MESSAGE"'"
+          }')
+
+          DISCORD_HTTP_STATUS=$(echo "$DISCORD_RESPONSE" | tail -n1)
+          DISCORD_RESPONSE_BODY=$(echo "$DISCORD_RESPONSE" | sed '$d')
+
+          if [ "$DISCORD_HTTP_STATUS" != "204" ]; then
+            echo "Failed to send Discord notification. HTTP status: $DISCORD_HTTP_STATUS"
+            echo "Response body: $DISCORD_RESPONSE_BODY"
+          else
+            echo "Discord notification sent successfully."
+          fi
+        else
+          echo "DISCORD_WEBHOOK is not set. Skipping Discord notification."
         fi
       continue-on-error: true
 
@@ -158,17 +204,13 @@ jobs:
         name: PDF
         path: conference_samp.pdf
 
-    - name: Notify Slack
+    - name: Notify Slack and Discord
       if: always()
       env:
         SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+        DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
         WORKFLOW_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
       run: |
-        if [ -z "$SLACK_WEBHOOK" ]; then
-          echo "SLACK_WEBHOOK is not set. Skipping Slack notification."
-          exit 0
-        fi
-
         if [ "${{ job.status }}" = "success" ]; then
           STATUS="成功"
           COLOR="#36a64f"
@@ -176,31 +218,58 @@ jobs:
           STATUS="失敗"
           COLOR="#ff0000"
         fi
-        
-        RESPONSE=$(curl -w "\n%{http_code}" -X POST $SLACK_WEBHOOK \
-        -H 'Content-type: application/json' \
-        --data '{
-          "attachments": [
-            {
-              "color": "'"$COLOR"'",
-              "blocks": [
-                {
-                  "type": "section",
-                  "text": {
-                    "type": "mrkdwn",
-                    "text": "*TeXドキュメントのビルドが'"$STATUS"'しました*\n\n*リポジトリ:* ${{ github.repository }}\n*ブランチ:* ${{ github.ref_name }}\n*コミット:* ${{ github.sha }}\n*実行者:* ${{ github.actor }}\n*ワークフロー:* <${{ env.WORKFLOW_URL }}|こちらをクリック>"
+
+        MESSAGE="*TeXドキュメントのビルドが${STATUS}しました*\n\n*リポジトリ:* ${{ github.repository }}\n*ブランチ:* ${{ github.ref_name }}\n*コミット:* ${{ github.sha }}\n*実行者:* ${{ github.actor }}\n*ワークフロー:* <${{ env.WORKFLOW_URL }}|こちらをクリック>"
+
+        if [ -n "$SLACK_WEBHOOK" ]; then
+          SLACK_RESPONSE=$(curl -w "\n%{http_code}" -X POST $SLACK_WEBHOOK \
+          -H 'Content-type: application/json' \
+          --data '{
+            "attachments": [
+              {
+                "color": "'"$COLOR"'",
+                "blocks": [
+                  {
+                    "type": "section",
+                    "text": {
+                      "type": "mrkdwn",
+                      "text": "'"$MESSAGE"'"
+                    }
                   }
-                }
-              ]
-            }
-          ]
-        }')
+                ]
+              }
+            ]
+          }')
 
-        HTTP_STATUS=$(echo "$RESPONSE" | tail -n1)
-        RESPONSE_BODY=$(echo "$RESPONSE" | sed '$d')
+          SLACK_HTTP_STATUS=$(echo "$SLACK_RESPONSE" | tail -n1)
+          SLACK_RESPONSE_BODY=$(echo "$SLACK_RESPONSE" | sed '$d')
 
-        if [ "$HTTP_STATUS" != "200" ]; then
-          echo "Failed to send Slack notification. HTTP status: $HTTP_STATUS"
-          echo "Response body: $RESPONSE_BODY"
-          exit 1
+          if [ "$SLACK_HTTP_STATUS" != "200" ]; then
+            echo "Failed to send Slack notification. HTTP status: $SLACK_HTTP_STATUS"
+            echo "Response body: $SLACK_RESPONSE_BODY"
+          else
+            echo "Slack notification sent successfully."
+          fi
+        else
+          echo "SLACK_WEBHOOK is not set. Skipping Slack notification."
+        fi
+
+        if [ -n "$DISCORD_WEBHOOK" ]; then
+          DISCORD_RESPONSE=$(curl -w "\n%{http_code}" -X POST $DISCORD_WEBHOOK \
+          -H 'Content-type: application/json' \
+          --data '{
+            "content": "'"$MESSAGE"'"
+          }')
+
+          DISCORD_HTTP_STATUS=$(echo "$DISCORD_RESPONSE" | tail -n1)
+          DISCORD_RESPONSE_BODY=$(echo "$DISCORD_RESPONSE" | sed '$d')
+
+          if [ "$DISCORD_HTTP_STATUS" != "204" ]; then
+            echo "Failed to send Discord notification. HTTP status: $DISCORD_HTTP_STATUS"
+            echo "Response body: $DISCORD_RESPONSE_BODY"
+          else
+            echo "Discord notification sent successfully."
+          fi
+        else
+          echo "DISCORD_WEBHOOK is not set. Skipping Discord notification."
         fi
