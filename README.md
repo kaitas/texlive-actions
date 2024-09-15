@@ -1,12 +1,12 @@
 # TeX Live GitHub Actions プロジェクト
 
-このプロジェクトは、GitHub Actionsを使用してTeX Live 2024相当の環境でTeXドキュメントをビルドし、結果をSlackに通知するワークフローを提供します。
+このプロジェクトは、GitHub Actionsを使用してTeX Live環境でTeXドキュメントをビルドし、結果をSlackに通知するワークフローを提供します。英語と日本語の文書作成に特化しています。
 
 ## 機能
 
-- GitHub Actionsを使用したTeX Live 2024環境の自動セットアップ
+- GitHub Actionsを使用したTeX Live環境の自動セットアップ
 - Dockerを使用した一貫性のある環境構築
-- ビルドレイヤーのキャッシングによる高速化
+- GitHub Container Registryを利用したDockerイメージのキャッシング
 - `ptex2pdf`を使用したTeXドキュメントのビルド
 - ビルド結果のPDFアーティファクトのアップロード
 - Slackへのビルド結果の自動通知（日本語）
@@ -14,7 +14,7 @@
 
 ## セットアップ
 
-1. このリポジトリをクローンまたはフォークします。Publicにする必要はありません。
+1. このリポジトリをクローンまたはフォークします。プライベートリポジトリでも構いません。
 
 2. `.github/workflows/texlive-build.yml`ファイルをプロジェクトのルートディレクトリに配置します。
 
@@ -23,27 +23,14 @@
    ```dockerfile
 FROM debian:bullseye-slim
 
-# Update and install essential packages
-RUN apt-get update && \
-    DEBIAN_FRONTEND=noninteractive apt-get install -y \
-    wget \
-    gpg \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
-
-# Add TeX Live repository
-RUN wget -qO- https://www.tug.org/texlive/files/texlive.asc | gpg --dearmor > /etc/apt/trusted.gpg.d/texlive.gpg && \
-    echo "deb http://ftp.jaist.ac.jp/pub/CTAN/systems/texlive/tlnet/debian/ unstable main" > /etc/apt/sources.list.d/texlive.list
-
-# Install TeX Live packages
 RUN apt-get update && \
     DEBIAN_FRONTEND=noninteractive apt-get install -y \
     texlive-base \
     texlive-lang-japanese \
     texlive-latex-extra \
     texlive-fonts-recommended \
+    texlive-binaries \
     xdvik-ja \
-    dvipsk-ja \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
@@ -51,23 +38,20 @@ WORKDIR /workdir
 
 CMD ["/bin/bash"]
    ```
-この Dockerfile は日本語サポートを含む TeX Live 環境を設定し、公式リポジトリから最新のパッケージをインストールします。
 
+4. GitHub Personal Access Token (PAT) を作成し、リポジトリのシークレットとして `CR_PAT` という名前で設定します。
 
-4. `.github/workflows/texlive-build.yml` ファイルには、ビルドが失敗した場合のデバッグ情報を出力するステップが含まれています。これにより、問題が発生した場合に詳細な情報を得ることができます。
+5. GitHubリポジトリの設定で、`SLACK_WEBHOOK`という名前のシークレットを作成し、SlackのWebhook URLを値として設定します。
 
-
-5. GitHubリポジトリの設定で、`SLACK_WEBHOOK`という名前のSecretを作成し、SlackのWebhook URLを値として設定します（詳細は次のセクションで解説）。
-
-6. Slackで着信Webhookを設定し、そのURLを上記のSecretとして保存します。
+6. Slackで着信Webhookを設定し、そのURLを上記のシークレットとして保存します。
 
 ## 使用方法
 
 1. TeXファイル（デフォルトでは`conference_samp.tex`）をプロジェクトのルートディレクトリに配置します。
 
-2. 変更をコミットし、`main`ブランチにプッシュします。
+2. 初回セットアップ時は、GitHub Actionsタブから手動でワークフローを実行します（`workflow_dispatch`イベント）。
 
-3. GitHub Actionsが自動的にワークフローを実行し、TeXドキュメントをビルドします。
+3. その後は、変更をコミットし`main`ブランチにプッシュすると、GitHub Actionsが自動的にワークフローを実行し、TeXドキュメントをビルドします。
 
 4. ビルド結果（成功または失敗）がSlackに通知されます。
 
@@ -83,63 +67,20 @@ CMD ["/bin/bash"]
 
 ## 注意事項
 
-- 初回のDockerイメージビルドには時間がかかる場合があります。だいたい10分ぐらい。
+- 初回のDockerイメージビルドには時間がかかる場合があります（約10分程度）。
 
-- キャッシュのサイズが大きくなる可能性があるため、定期的にGitHub Actionsのキャッシュをクリアすることを検討してください。
+- このワークフローは`main`ブランチへのプッシュと手動実行（`workflow_dispatch`）でのみ実行されます。他のブランチやイベントでも実行したい場合は、ワークフローファイルの`on`セクションを適宜修正してください。
 
-- このワークフローは`main`ブランチへのプッシュでのみ実行されます。他のブランチやイベントでも実行したい場合は、ワークフローファイルの`on`セクションを適宜修正してください。
+- GitHub Container Registryを使用しているため、リポジトリに適切な権限設定が必要です。
+
+## トラブルシューティング
+
+- ビルドに失敗した場合、ワークフローのログを確認して詳細なエラー情報を取得できます。
+
+- Dockerイメージのビルドに問題がある場合は、ローカル環境でDockerfileをテストしてみてください。
+
+- GitHub Container Registryへのプッシュに失敗する場合は、PAT（Personal Access Token）の権限を確認してください。
 
 ## サポート
 
 問題や質問がある場合は、GitHubのIssueを開いてください。
-
-
-
-## GitHubでのSLACK_WEBHOOK Secretの設定
-
-1. GitHubで対象のリポジトリを開きます。
-
-2. リポジトリのメインページで、上部の「Settings」タブをクリックします。
-
-3. 左側のサイドバーで、「Secrets and variables」を展開し、「Actions」をクリックします。
-
-4. 「Repository secrets」セクションで、「New repository secret」ボタンをクリックします。
-
-5. 以下の情報を入力します：
-   - Name: `SLACK_WEBHOOK`（大文字小文字を正確に入力してください）
-   - Value: Slackから取得したWebhook URL（例：https://hooks.slack.com/services/T00000000/B00000000/XXXXXXXXXXXXXXXXXXXXXXXX）
-
-6. 「Add secret」ボタンをクリックして保存します。
-
-これで`SLACK_WEBHOOK`シークレットが設定され、GitHub Actionsワークフローで安全に使用できるようになります。
-
-注意：
-- Secretの値はGitHubの管理者やリポジトリの所有者でも表示できません。設定後は値を確認できないので、入力時に正確に入力されていることを確認してください。
-- Secretを更新する場合は、同じ手順で新しい値を入力します。
-- リポジトリのSecretは、フォークされたリポジトリには引き継がれません。フォークしたリポジトリで使用する場合は、別途設定が必要です。
-
-### Slackでの着信Webhookの設定
-
-1. Slackで通知を受け取るワークスペースにログインします。
-
-2. Slack APIのウェブサイト（https://api.slack.com/apps）にアクセスします。
-
-3. 「Create New App」をクリックし、「From scratch」を選択します。
-
-4. アプリ名とワークスペースを選択して、アプリを作成します。
-
-5. 左側のサイドバーで「Incoming Webhooks」をクリックします。
-
-6. 「Activate Incoming Webhooks」を「On」に切り替えます。
-
-7. ページ下部の「Add New Webhook to Workspace」をクリックします。
-
-8. 通知を送信するチャンネルを選択し、「許可する」をクリックします。
-
-9. 生成されたWebhook URLをコピーします。これが、GitHubのSLACK_WEBHOOK Secretに設定する値です。
-
-注意：
-- Webhook URLは機密情報です。安全に管理し、公開リポジトリにコミットしないよう注意してください。
-- 必要に応じて、Slackアプリの設定でアイコンや名前をカスタマイズできます。
-
-これらの手順を完了すると、GitHub ActionsからSlackへの通知が設定されます。ワークフローが実行されるたびに、設定したSlackチャンネルに通知が送信されます。
