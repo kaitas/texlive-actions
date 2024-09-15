@@ -77,6 +77,8 @@ CMD ["/bin/bash"]
   - `SLACK_WEBHOOK`が設定されていない場合、その旨がログに記録されます。
   - Slack通知の送信が成功しなかった場合（HTTPステータスコードが200以外の場合）、エラー内容がログに記録されます。
 
+- GitHub Container Registry (ghcr.io) へのログインに失敗した場合（CR_PATの有効期限切れなど）、Slack通知が送信されます。通知を受け取った場合は、[GitHub Personal Access Token (PAT)](https://github.com/settings/tokens) の状態を確認し、必要に応じて更新してください。
+
 
 ## トラブルシューティング
 
