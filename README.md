@@ -20,7 +20,7 @@
 
 3. プロジェクトのルートディレクトリに以下の内容の`Dockerfile`を作成します：
 
-   ```dockerfile
+```dockerfile
 FROM debian:bullseye-slim
 
 RUN apt-get update && \
@@ -37,7 +37,7 @@ RUN apt-get update && \
 WORKDIR /workdir
 
 CMD ["/bin/bash"]
-   ```
+```
 
 4. GitHub Personal Access Token (PAT) を作成し、リポジトリのシークレットとして `CR_PAT` という名前で設定します。
 
@@ -73,6 +73,11 @@ CMD ["/bin/bash"]
 
 - GitHub Container Registryを使用しているため、リポジトリに適切な権限設定が必要です。
 
+- SLACK通知に関して:
+  - `SLACK_WEBHOOK`が設定されていない場合、その旨がログに記録されます。
+  - Slack通知の送信が成功しなかった場合（HTTPステータスコードが200以外の場合）、エラー内容がログに記録されます。
+
+
 ## トラブルシューティング
 
 - ビルドに失敗した場合、ワークフローのログを確認して詳細なエラー情報を取得できます。
@@ -84,3 +89,40 @@ CMD ["/bin/bash"]
 ## サポート
 
 問題や質問がある場合は、GitHubのIssueを開いてください。
+
+## FAQ
+
+Q: 画像を追加したい
+A: /figにPNGファイルを置いて以下のように記述してください
+```latex
+\begin{figure}[H]
+ \centering
+ \includegraphics[width=40truemm]{fig-sample.png}
+ \caption{\small{図の挿入例．}}
+ \label{fig:sample}
+\end{figure}
+```
+
+Q: ターゲットにするTeXファイルを変更したい
+A: `.github/workflows/texlive-build.yml`ファイル内の`Build TeX document`ステップを編集してください。`ptex2pdf`コマンドの引数にある`conference_samp.tex`を、ビルドしたいTeXファイルの名前に変更します。例えば：
+
+```yaml
+- name: Build TeX document
+  run: |
+    docker run --rm -v ${{ github.workspace }}:/workdir texlive:latest \
+      ptex2pdf your-file-name.tex -l -ot -kanji=utf8
+```
+
+Q: 生成されるPDFの名前を変えたい
+A: PDFの名前は通常、入力するTeXファイルの名前に基づいて自動的に生成されます。しかし、生成後にPDFの名前を変更することができます。`.github/workflows/texlive-build.yml`ファイル内の`Upload PDF artifact`ステップの前に、以下のようなステップを追加してPDFの名前を変更できます：
+
+```yaml
+- name: Rename PDF
+  run: mv conference_samp.pdf your-desired-name.pdf
+
+- name: Upload PDF artifact
+  uses: actions/upload-artifact@v4
+  with:
+    name: PDF
+    path: your-desired-name.pdf
+```

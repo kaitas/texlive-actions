@@ -74,6 +74,11 @@ jobs:
         SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
         WORKFLOW_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
       run: |
+        if [ -z "$SLACK_WEBHOOK" ]; then
+          echo "SLACK_WEBHOOK is not set. Skipping Slack notification."
+          exit 0
+        fi
+
         if [ "${{ job.status }}" = "success" ]; then
           STATUS="成功"
           COLOR="#36a64f"
@@ -82,7 +87,7 @@ jobs:
           COLOR="#ff0000"
         fi
         
-        curl -X POST $SLACK_WEBHOOK \
+        RESPONSE=$(curl -w "\n%{http_code}" -X POST $SLACK_WEBHOOK \
         -H 'Content-type: application/json' \
         --data '{
           "attachments": [
@@ -99,4 +104,13 @@ jobs:
               ]
             }
           ]
-        }'
+        }')
+
+        HTTP_STATUS=$(echo "$RESPONSE" | tail -n1)
+        RESPONSE_BODY=$(echo "$RESPONSE" | sed '$d')
+
+        if [ "$HTTP_STATUS" != "200" ]; then
+          echo "Failed to send Slack notification. HTTP status: $HTTP_STATUS"
+          echo "Response body: $RESPONSE_BODY"
+          exit 1
+        fi
