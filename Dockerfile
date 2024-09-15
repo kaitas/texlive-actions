@@ -1,12 +1,16 @@
-FROM ubuntu:latest
+FROM debian:bullseye-slim
 
 RUN apt-get update && \
-    apt-get install -y \
+    DEBIAN_FRONTEND=noninteractive apt-get install -y \
     texlive-full \
+    texlive-lang-japanese \
+    texlive-lang-cjk \
+    xdvik-ja \
+    dvipsk-ja \
+    gv \
+    psutils \
+    && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
-
-RUN tlmgr update --self && \
-    tlmgr update --all
 
 WORKDIR /workdir
 
