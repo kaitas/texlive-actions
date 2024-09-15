@@ -23,6 +23,19 @@
    ```dockerfile
 FROM debian:bullseye-slim
 
+# Update and install essential packages
+RUN apt-get update && \
+    DEBIAN_FRONTEND=noninteractive apt-get install -y \
+    wget \
+    gpg \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+# Add TeX Live repository
+RUN wget -qO- https://www.tug.org/texlive/files/texlive.asc | gpg --dearmor > /etc/apt/trusted.gpg.d/texlive.gpg && \
+    echo "deb http://ftp.jaist.ac.jp/pub/CTAN/systems/texlive/tlnet/debian/ unstable main" > /etc/apt/sources.list.d/texlive.list
+
+# Install TeX Live packages
 RUN apt-get update && \
     DEBIAN_FRONTEND=noninteractive apt-get install -y \
     texlive-base \
@@ -38,11 +51,15 @@ WORKDIR /workdir
 
 CMD ["/bin/bash"]
    ```
-この Dockerfile は日本語サポートを含む基本的な TeX Live 環境を設定します。
+この Dockerfile は日本語サポートを含む TeX Live 環境を設定し、公式リポジトリから最新のパッケージをインストールします。
 
-4. GitHubリポジトリの設定で、`SLACK_WEBHOOK`という名前のSecretを作成し、SlackのWebhook URLを値として設定します（詳細は次のセクションで解説）。
 
-5. Slackで着信Webhookを設定し、そのURLを上記のSecretとして保存します。
+4. `.github/workflows/texlive-build.yml` ファイルには、ビルドが失敗した場合のデバッグ情報を出力するステップが含まれています。これにより、問題が発生した場合に詳細な情報を得ることができます。
+
+
+5. GitHubリポジトリの設定で、`SLACK_WEBHOOK`という名前のSecretを作成し、SlackのWebhook URLを値として設定します（詳細は次のセクションで解説）。
+
+6. Slackで着信Webhookを設定し、そのURLを上記のSecretとして保存します。
 
 ## 使用方法
 
