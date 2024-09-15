@@ -2,13 +2,12 @@ FROM debian:bullseye-slim
 
 RUN apt-get update && \
     DEBIAN_FRONTEND=noninteractive apt-get install -y \
-    texlive-full \
+    texlive-base \
     texlive-lang-japanese \
-    texlive-lang-cjk \
+    texlive-latex-extra \
+    texlive-fonts-recommended \
     xdvik-ja \
     dvipsk-ja \
-    gv \
-    psutils \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 

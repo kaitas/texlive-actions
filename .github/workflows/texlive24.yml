@@ -2,20 +2,20 @@ name: Build TeX Document and Notify
 
 on:
   push:
-    branches: [ main ]  # mainブランチへのpushで実行
+    branches: [ main ]
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
 
     - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v2
+      uses: docker/setup-buildx-action@v3
 
     - name: Cache Docker layers
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: /tmp/.buildx-cache
         key: ${{ runner.os }}-buildx-${{ github.sha }}
@@ -23,7 +23,7 @@ jobs:
           ${{ runner.os }}-buildx-
 
     - name: Build and cache Docker image
-      uses: docker/build-push-action@v4
+      uses: docker/build-push-action@v5
       with:
         context: .
         push: false
@@ -41,15 +41,15 @@ jobs:
       run: |
         docker run --rm -v ${{ github.workspace }}:/workdir texlive:latest \
           ptex2pdf conference_samp.tex -l -ot -kanji=utf8
-      
+
     - name: Upload PDF artifact
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: PDF
         path: conference_samp.pdf
 
     - name: Notify Slack
-      if: always()  # ジョブの成功・失敗に関わらず実行
+      if: always()
       env:
         SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
         WORKFLOW_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
