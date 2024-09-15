@@ -219,7 +219,8 @@ jobs:
           COLOR="#ff0000"
         fi
 
-        MESSAGE="*TeXドキュメントのビルドが${STATUS}しました*\n\n*リポジトリ:* ${{ github.repository }}\n*ブランチ:* ${{ github.ref_name }}\n*コミット:* ${{ github.sha }}\n*実行者:* ${{ github.actor }}\n*ワークフロー:* <${{ env.WORKFLOW_URL }}|こちらをクリック>"
+        SLACK_MESSAGE="*TeXドキュメントのビルドが${STATUS}しました*\n\n*リポジトリ:* ${{ github.repository }}\n*ブランチ:* ${{ github.ref_name }}\n*コミット:* ${{ github.sha }}\n*実行者:* ${{ github.actor }}\n*ワークフロー:* <${{ env.WORKFLOW_URL }}|こちらをクリック>"
+        DISCORD_MESSAGE="**TeXドキュメントのビルドが${STATUS}しました**\n\n**リポジトリ:** ${{ github.repository }}\n**ブランチ:** ${{ github.ref_name }}\n**コミット:** ${{ github.sha }}\n**実行者:** ${{ github.actor }}\n**ワークフロー:** ${{ env.WORKFLOW_URL }} (こちらをクリック)"
 
         if [ -n "$SLACK_WEBHOOK" ]; then
           SLACK_RESPONSE=$(curl -w "\n%{http_code}" -X POST $SLACK_WEBHOOK \
@@ -233,7 +234,7 @@ jobs:
                     "type": "section",
                     "text": {
                       "type": "mrkdwn",
-                      "text": "'"$MESSAGE"'"
+                      "text": "'"$SLACK_MESSAGE"'"
                     }
                   }
                 ]
@@ -258,7 +259,7 @@ jobs:
           DISCORD_RESPONSE=$(curl -w "\n%{http_code}" -X POST $DISCORD_WEBHOOK \
           -H 'Content-type: application/json' \
           --data '{
-            "content": "'"$MESSAGE"'"
+            "content": "'"$DISCORD_MESSAGE"'"
           }')
 
           DISCORD_HTTP_STATUS=$(echo "$DISCORD_RESPONSE" | tail -n1)
