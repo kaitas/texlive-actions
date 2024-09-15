@@ -14,7 +14,10 @@
 
 ## セットアップ
 
-1. このリポジトリをクローンまたはフォークします。プライベートリポジトリでも構いません。
+![image](https://github.com/user-attachments/assets/9e416889-ab13-45ec-ba5a-ccf0371a2f55)
+
+
+1. このリポジトリをクローンまたはフォークします。よくわからないひとは右上の「Template」で一発です。プライベートリポジトリでも構いません。
 
 2. `.github/workflows/texlive-build.yml`ファイルをプロジェクトのルートディレクトリに配置します。
 
