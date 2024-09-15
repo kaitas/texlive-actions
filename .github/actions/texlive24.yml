@@ -1,0 +1,82 @@
+name: Build TeX Document and Notify
+
+on:
+  push:
+    branches: [ main ]  # mainブランチへのpushで実行
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v2
+
+    - name: Cache Docker layers
+      uses: actions/cache@v3
+      with:
+        path: /tmp/.buildx-cache
+        key: ${{ runner.os }}-buildx-${{ github.sha }}
+        restore-keys: |
+          ${{ runner.os }}-buildx-
+
+    - name: Build and cache Docker image
+      uses: docker/build-push-action@v4
+      with:
+        context: .
+        push: false
+        load: true
+        tags: texlive:latest
+        cache-from: type=local,src=/tmp/.buildx-cache
+        cache-to: type=local,dest=/tmp/.buildx-cache-new,mode=max
+
+    - name: Move cache
+      run: |
+        rm -rf /tmp/.buildx-cache
+        mv /tmp/.buildx-cache-new /tmp/.buildx-cache
+
+    - name: Build TeX document
+      run: |
+        docker run --rm -v ${{ github.workspace }}:/workdir texlive:latest \
+          ptex2pdf conference_samp.tex -l -ot -kanji=utf8
+      
+    - name: Upload PDF artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: PDF
+        path: conference_samp.pdf
+
+    - name: Notify Slack
+      if: always()  # ジョブの成功・失敗に関わらず実行
+      env:
+        SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+        WORKFLOW_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+      run: |
+        if [ "${{ job.status }}" = "success" ]; then
+          STATUS="成功"
+          COLOR="#36a64f"
+        else
+          STATUS="失敗"
+          COLOR="#ff0000"
+        fi
+        
+        curl -X POST $SLACK_WEBHOOK \
+        -H 'Content-type: application/json' \
+        --data '{
+          "attachments": [
+            {
+              "color": "'"$COLOR"'",
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "*TeXドキュメントのビルドが'"$STATUS"'しました*\n\n*リポジトリ:* ${{ github.repository }}\n*ブランチ:* ${{ github.ref_name }}\n*コミット:* ${{ github.sha }}\n*実行者:* ${{ github.actor }}\n*ワークフロー:* <${{ env.WORKFLOW_URL }}|こちらをクリック>"
+                  }
+                }
+              ]
+            }
+          ]
+        }'

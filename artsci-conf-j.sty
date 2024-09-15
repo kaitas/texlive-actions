@@ -1,0 +1,113 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+% artsci-conf-j.sty
+% ver 1.0
+% 2014/12/09
+% by Taichi Watanabe (earth@gamescience.jp)
+%
+% ver 1.1
+% 2019/2/26
+% by Taichi Watanabe (earth@gamescience.jp)
+%
+% ver 1.2
+% 2019/4/24
+% by Taichi Watanabe (earth@gamescience.jp)
+%
+% ver 1.3
+% 2023/3/15
+% by Taichi Watanabe (earth@gamescience.jp)
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+% Legal Notice:
+% This code is offered as-is without any warranty either expressed or
+% implied; without even the implied warranty of MERCHANTABILITY or
+% FITNESS FOR A PARTICULAR PURPOSE!
+% User assumes all risk.
+% In no event shall The Society for Art and Science or any contributor
+% to this code be liable for any damages or losses, including,
+% but not limited to, incidental,
+% consequential, or any other damages, resulting from the use or misuse
+% of any information contained here.
+%
+% All comments are the opinions of their respective authors and are not
+% necessarily endorsed by the Society for Art and Science.
+%
+% This work is distributed under the LaTeX Project Public License (LPPL)
+% ( http://www.latex-project.org/ ) version 1.3, and may be freely used,
+% distributed and modified. A copy of the LPPL, version 1.3, is included
+% in the base LaTeX documentation of all distributions of LaTeX released
+% 2003/12/01 or later.
+% Retain all contribution notices and credits.
+% ** Modified files should be clearly indicated as such, including  **
+% ** renaming them and changing author support contact information. **
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% レイアウト
+
+\usepackage[top=30.0truemm,bottom=37.0truemm,left=20.0truemm,right=20.0truemm]{geometry}
+
+\setlength{\headsep}{11.0truemm}		% ヘッダと本文の間隔
+\setlength{\footskip}{12.0truemm}		% フッタ位置調整
+\setlength{\abovecaptionskip}{-0.5truemm}	% 図キャプションと図との間隔
+\setlength{\belowcaptionskip}{1.5truemm}	% 表キャプションと表との間隔
+\setlength{\columnsep}{6truemm}			% 二段組みの間隔
+
+%%% ページ & ヘッダースタイル
+
+\usepackage{fancyhdr}
+\usepackage{lastpage}
+
+\fancypagestyle{aspagestyle}{
+\lhead{}
+\rhead{}
+\chead{
+	\footnotesize{\textbf{
+		NICOGRAPH \nicographyear, \(\;\)
+		pp. \articlenumber:1 -- \articlenumber:\pageref{LastPage}
+	}}
+}
+\cfoot{-- \articlenumber:\thepage \(\,\) --}
+\renewcommand{\headrulewidth}{0.0pt}
+}
+
+%%% タイトル用マクロ
+\makeatletter
+\def\jtitle#1{\long\def\@jtitle{#1}}
+\def\@jtitle{}
+\def\jauthor#1{\long\def\@jauthor{#1}}
+\def\@jauthor{}
+\def\jaffiliation#1{\long\def\@jaffiliation{#1}}
+\def\@jaffiliation{}
+\def\etitle#1{\long\def\@etitle{#1}}
+\def\@etitle{}
+\def\eauthor#1{\long\def\@eauthor{#1}}
+\def\@eauthor{}
+\def\eaffiliation#1{\long\def\@eaffiliation{#1}}
+\def\@eaffiliation{}
+\def\email#1{\long\def\@email{#1}}
+\def\@email{}
+\def\jabstract#1{\long\def\@jabstract{#1}}
+\def\@jabstract{}
+\def\@maketitle{
+\vspace*{5truemm}
+{\Large \begin{center}\textbf{\@jtitle}\end{center}}
+\vspace{0truemm}
+{\Large \begin{center}\@jauthor\end{center}}
+\vspace{-3truemm}
+{\large \begin{center}\@jaffiliation\end{center}}
+\vspace{4truemm}
+{\Large \begin{center}\textbf{\@etitle}\end{center}}
+\vspace{0truemm}
+{\Large \begin{center}\textbf{\@eauthor}\end{center}}
+\vspace{-3truemm}
+{\large \begin{center}\@eaffiliation\end{center}}
+\begin{center}\texttt{\@email}\end{center}
+\vspace{5truemm}
+{\small \textbf{概要}\\ \@jabstract}
+\vspace{7truemm}
+}
+
+\makeatother
