@@ -134,3 +134,68 @@ A: PDFの名前は通常、入力するTeXファイルの名前に基づいて�
     name: PDF
     path: your-desired-name.pdf
 ```
+
+``name: PDF`` の「PDF」を変えると、生成されるZIPファイル名を変えられます。
+
+
+Q: エラーが出た
+A: Actionsのログを見てChatGPTやClaudeに訊いてみることをおすすめします。
+TeX原稿に起因する多くあるエラーは以下のようなものです。
+
+- アンダースコア：「_」はアンダースコアはTeXで下付き文字を表すために使用されます。通常のテキストとして使用するには、バックスラッシュでエスケープする、\textunderscore コマンドを使用する、verbatim環境を使用する（コードブロックなどで）
+
+- 丸数字などUnicode関係：\usepackage{pifont} で解決
+
+> ワークショップの設計は、\ding{172}スマートフォンの操作能力確認、\ding{173}アバター制作体験、\ding{174}ポーズや表情の表現、\ding{175}タブレットを利用したペイントソフトとデジタルペイント体験、\ding{176}レイヤーによる合成、\ding{177}文字の入力、\ding{178}記念写真撮影を通した表情確認となっている。
+
+- XeLaTeXやLuaLaTeXを使用することで、Unicode文字を直接扱えるようにする
+1. ドキュメントのプリアンブルを以下のように変更します：
+
+```latex
+\documentclass[uplatex,dvipdfmx]{jsarticle}
+\usepackage{xltxtra}
+\usepackage{zxjatype}
+\setjamainfont{IPAExMincho}
+\setjasansfont{IPAExGothic}
+```
+
+2. ファイルの冒頭に以下のコメントを追加して、エンコーディングを明示的に指定します：
+
+```latex
+% !TEX encoding = UTF-8 Unicode
+% !TEX program = xelatex
+```
+
+3. 本文中では、Unicode文字（丸数字）をそのまま使用できます：
+
+```latex
+ワークショップの設計は第2回が、⑧漫画の作り方解説、⑨...
+```
+
+4. ビルド時に、`xelatex`コマンドを使用してコンパイルします：
+
+```
+xelatex your_file.tex
+```
+
+GitHub Actionsのワークフローファイル（`.github/workflows/texlive-build.yml`）も、XeLaTeXを使用するように更新する必要があります。以下のように変更してください：
+
+```yaml
+- name: Build TeX document
+  run: |
+    docker run --rm -v ${{ github.workspace }}:/workdir texlive:latest \
+      xelatex -interaction=nonstopmode -halt-on-error your_file.tex
+```
+
+この方法を使用することで、以下のメリットがあります：
+
+1. Unicode文字（丸数字を含む）を直接使用できる
+2. 追加のパッケージが不要
+3. 日本語フォントの柔軟な指定が可能
+
+ただし、注意点として：
+
+1. XeLaTeXの使用にはTeX Live環境の更新が必要な場合がある
+2. ビルド時間が若干長くなる可能性がある
+
+これらの変更を適用することで、Unicode文字によるエラーを回避し、より柔軟なTeX環境を構築できます。
