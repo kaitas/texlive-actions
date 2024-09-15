@@ -6,8 +6,8 @@ RUN apt-get update && \
     texlive-lang-japanese \
     texlive-latex-extra \
     texlive-fonts-recommended \
+    texlive-binaries \
     xdvik-ja \
-    dvipsk-ja \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 

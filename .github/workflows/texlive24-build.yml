@@ -3,10 +3,12 @@ name: Build TeX Document and Notify
 on:
   push:
     branches: [ main ]
+  workflow_dispatch:
 
 jobs:
-  build:
+  initial-setup:
     runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch'
 
     steps:
     - uses: actions/checkout@v4
@@ -14,33 +16,33 @@ jobs:
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v3
 
-    - name: Clear cache
-      run: |
-        rm -rf /tmp/.buildx-cache
-        mkdir -p /tmp/.buildx-cache-new
-
-    - name: Build and cache Docker image
+    - name: Build and push Docker image
       uses: docker/build-push-action@v5
       with:
         context: .
-        push: false
+        push: true
+        tags: ghcr.io/${{ github.repository_owner }}/texlive:latest
+        cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/texlive:buildcache
+        cache-to: type=registry,ref=ghcr.io/${{ github.repository_owner }}/texlive:buildcache,mode=max
+
+  update-and-build:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push'
+    needs: initial-setup
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Build and load Docker image
+      uses: docker/build-push-action@v5
+      with:
+        context: .
         load: true
         tags: texlive:latest
-        cache-from: type=local,src=/tmp/.buildx-cache-new
-        cache-to: type=local,dest=/tmp/.buildx-cache-new,mode=max
-        outputs: type=docker,dest=/tmp/texlive-image.tar
-
-    - name: Debug Docker build
-      if: failure()
-      run: |
-        docker load < /tmp/texlive-image.tar
-        docker run --rm texlive:latest cat /var/log/apt/history.log
-        docker run --rm texlive:latest cat /var/log/apt/term.log
-
-    - name: Move cache
-      run: |
-        rm -rf /tmp/.buildx-cache
-        mv /tmp/.buildx-cache-new /tmp/.buildx-cache
+        cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/texlive:buildcache
 
     - name: Build TeX document
       run: |
