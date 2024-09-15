@@ -21,20 +21,24 @@
 3. プロジェクトのルートディレクトリに以下の内容の`Dockerfile`を作成します：
 
    ```dockerfile
-   FROM ubuntu:latest
+FROM debian:bullseye-slim
 
-   RUN apt-get update && \
-       apt-get install -y \
-       texlive-full \
-       && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && \
+    DEBIAN_FRONTEND=noninteractive apt-get install -y \
+    texlive-base \
+    texlive-lang-japanese \
+    texlive-latex-extra \
+    texlive-fonts-recommended \
+    xdvik-ja \
+    dvipsk-ja \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 
-   RUN tlmgr update --self && \
-       tlmgr update --all
+WORKDIR /workdir
 
-   WORKDIR /workdir
-
-   CMD ["/bin/bash"]
+CMD ["/bin/bash"]
    ```
+この Dockerfile は日本語サポートを含む基本的な TeX Live 環境を設定します。
 
 4. GitHubリポジトリの設定で、`SLACK_WEBHOOK`という名前のSecretを作成し、SlackのWebhook URLを値として設定します（詳細は次のセクションで解説）。
 

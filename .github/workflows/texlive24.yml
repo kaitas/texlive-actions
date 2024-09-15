@@ -31,6 +31,16 @@ jobs:
         tags: texlive:latest
         cache-from: type=local,src=/tmp/.buildx-cache
         cache-to: type=local,dest=/tmp/.buildx-cache-new,mode=max
+        build-args: |
+          BUILDKIT_INLINE_CACHE=1
+        outputs: type=docker,dest=/tmp/texlive-image.tar
+
+    - name: Debug Docker build
+      if: failure()
+      run: |
+        docker load < /tmp/texlive-image.tar
+        docker run --rm texlive:latest cat /var/log/apt/history.log
+        docker run --rm texlive:latest cat /var/log/apt/term.log
 
     - name: Move cache
       run: |
