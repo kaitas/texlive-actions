@@ -1,6 +1,6 @@
 # TeX Live GitHub Actions プロジェクト
 
-このプロジェクトは、GitHub Actionsを使用してTeX Live環境でTeXドキュメントをビルドし、結果をSlackに通知するワークフローを提供します。英語と日本語の文書作成に特化しています。
+このプロジェクトは、GitHub Actionsを使用してTeX Live環境でTeXドキュメントをビルドし、結果をSlackとDiscordに通知するワークフローを提供します。英語と日本語の文書作成に特化しています。
 
 ## 機能
 
@@ -9,7 +9,7 @@
 - GitHub Container Registryを利用したDockerイメージのキャッシング
 - `ptex2pdf`を使用したTeXドキュメントのビルド
 - ビルド結果のPDFアーティファクトのアップロード
-- Slackへのビルド結果の自動通知（日本語）
+- SlackとDiscordへのビルド結果の自動通知（日本語）
 - サンプルとして[芸術科学会 NICOGRAPH の TeXサンプルファイル](https://art-science.org/nicograph/#format)を使用しています。御礼申し上げます。
 
 ## セットアップ
@@ -20,30 +20,32 @@
 
 3. プロジェクトのルートディレクトリに以下の内容の`Dockerfile`を作成します：
 
-```dockerfile
-FROM debian:bullseye-slim
+   ```dockerfile
+   FROM debian:bullseye-slim
 
-RUN apt-get update && \
-    DEBIAN_FRONTEND=noninteractive apt-get install -y \
-    texlive-base \
-    texlive-lang-japanese \
-    texlive-latex-extra \
-    texlive-fonts-recommended \
-    texlive-binaries \
-    xdvik-ja \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
+   RUN apt-get update && \
+       DEBIAN_FRONTEND=noninteractive apt-get install -y \
+       texlive-base \
+       texlive-lang-japanese \
+       texlive-latex-extra \
+       texlive-fonts-recommended \
+       texlive-binaries \
+       xdvik-ja \
+       && apt-get clean \
+       && rm -rf /var/lib/apt/lists/*
 
-WORKDIR /workdir
+   WORKDIR /workdir
 
-CMD ["/bin/bash"]
-```
+   CMD ["/bin/bash"]
+   ```
 
 4. GitHub Personal Access Token (PAT) を作成し、リポジトリのシークレットとして `CR_PAT` という名前で設定します。
 
-5. GitHubリポジトリの設定で、`SLACK_WEBHOOK`という名前のシークレットを作成し、SlackのWebhook URLを値として設定します。
+5. GitHubリポジトリの設定で、以下のシークレットを作成します：
+   - `SLACK_WEBHOOK`: SlackのWebhook URL
+   - `DISCORD_WEBHOOK`: DiscordのWebhook URL
 
-6. Slackで着信Webhookを設定し、そのURLを上記のシークレットとして保存します。
+6. SlackとDiscordで着信Webhookを設定し、それぞれのURLを上記のシークレットとして保存します。
 
 ## 使用方法
 
@@ -53,7 +55,7 @@ CMD ["/bin/bash"]
 
 3. その後は、変更をコミットし`main`ブランチにプッシュすると、GitHub Actionsが自動的にワークフローを実行し、TeXドキュメントをビルドします。
 
-4. ビルド結果（成功または失敗）がSlackに通知されます。
+4. ビルド結果（成功または失敗）がSlackとDiscordに通知されます。
 
 5. ビルドが成功した場合、生成されたPDFがGitHub Actionsのアーティファクトとして保存されます。
 
@@ -63,7 +65,7 @@ CMD ["/bin/bash"]
 
 - 必要に応じて、`Dockerfile`に追加のパッケージやツールをインストールできます。
 
-- Slack通知のフォーマットやコンテンツは、ワークフローファイル内の`Notify Slack`ステップで調整できます。
+- Slack通知とDiscord通知のフォーマットやコンテンツは、ワークフローファイル内の`Notify Slack and Discord`ステップで調整できます。
 
 ## 注意事項
 
@@ -73,12 +75,11 @@ CMD ["/bin/bash"]
 
 - GitHub Container Registryを使用しているため、リポジトリに適切な権限設定が必要です。
 
-- SLACK通知に関して:
-  - `SLACK_WEBHOOK`が設定されていない場合、その旨がログに記録されます。
-  - Slack通知の送信が成功しなかった場合（HTTPステータスコードが200以外の場合）、エラー内容がログに記録されます。
+- Slack通知とDiscord通知に関して:
+  - `SLACK_WEBHOOK`または`DISCORD_WEBHOOK`が設定されていない場合、その旨がログに記録されます。
+  - 通知の送信が成功しなかった場合（HTTPステータスコードが期待値以外の場合）、エラー内容がログに記録されます。
 
-- GitHub Container Registry (ghcr.io) へのログインに失敗した場合（CR_PATの有効期限切れなど）、Slack通知が送信されます。通知を受け取った場合は、[GitHub Personal Access Token (PAT)](https://github.com/settings/tokens) の状態を確認し、必要に応じて更新してください。
-
+- GitHub Container Registry (ghcr.io) へのログインに失敗した場合（CR_PATの有効期限切れなど）、SlackとDiscordに通知が送信されます。通知を受け取った場合は、[GitHub Personal Access Token (PAT)](https://github.com/settings/tokens) の状態を確認し、必要に応じて更新してください。
 
 ## トラブルシューティング
 
@@ -87,6 +88,8 @@ CMD ["/bin/bash"]
 - Dockerイメージのビルドに問題がある場合は、ローカル環境でDockerfileをテストしてみてください。
 
 - GitHub Container Registryへのプッシュに失敗する場合は、PAT（Personal Access Token）の権限を確認してください。
+
+- Slack通知やDiscord通知に問題がある場合は、それぞれのWebhook URLが正しく設定されているか確認してください。
 
 ## サポート
 
